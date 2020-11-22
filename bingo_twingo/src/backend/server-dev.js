@@ -117,5 +117,19 @@ io.on('connect', (socket) => {
     console.log("linia ->"+JSON.stringify(playInfo));
     io.sockets.in(game.id).emit('linia_accepted',playInfo);
   });
-  
+
+
+  /* ONLINE MODE */
+
+  socket.on('joinRoom', roomName => {
+    socket.join(roomName);
+    console.log("JOINED");
+    io.to(roomName).emit('joined')
+  });
+
+  socket.on('createRoom', roomName => {
+    console.log("CREATING ROOM:");
+    console.log(roomName)
+  });
+
 });

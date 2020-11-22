@@ -24,12 +24,10 @@ const app = (() => {
     let players = []
     let pubSub = new PubSub();
     let stateApp = "stop";
-    debugger
-    const socket = io('ws://localhost:8080', {transports: ['websocket']});
-    socket.on('connect', () => {
-        socket.emit('join', `POPO`);
-        console.log("EMIT")
-    });
+    let socket = io('ws://localhost:8080', { transports: ['websocket'] });
+
+
+    /* OFFLINE MODE */
 
     /* Every time runs pick a ball from bombo bingo game */
     let getBallFromBombo = () => {
@@ -40,7 +38,7 @@ const app = (() => {
         if (num) {
             pubSub.publish("New Number", bombo.getExtractedNumbers());
 
-        /* otherwise means bombo is running out of ball and we should finish the game */    
+            /* otherwise means bombo is running out of ball and we should finish the game */
         } else {
             stop();
         }
@@ -53,7 +51,7 @@ const app = (() => {
     }
     /* Start bingo play */
     let start = () => {
-        
+
         /* Basic template where we are going to render bingo play */
         let doc = new DOMParser().parseFromString(`
             <div class="gameLayout">
@@ -82,9 +80,8 @@ const app = (() => {
         /* Subscribe app to LINIA event. When this occurs
         we show up a modal with the player awarded and a gif animation 
         obviously we stop bingo playing until modal is closed 
-        */        
+        */
         pubSub.subscribe("LINIA", (player) => {
-            debug("Linia");            
             /* Stop bingo playing */
             stop();
             /* As linia only could be awarded once per playing we delete that event
@@ -93,8 +90,6 @@ const app = (() => {
             /* Show modal */
             setTimeout(function () {
                 showModal(modalLiniaBingo(player, "linea"), function () {
-                    debug("SPEEEED");
-                    debug(app.speed);
                     myApp = setInterval(getBallFromBombo, app.speed);
                 })
             }, 50);
@@ -139,6 +134,43 @@ const app = (() => {
         myApp = setInterval(getBallFromBombo, app.speed);
     }
 
+
+    /* ONLINE MODE */
+
+    let onlineMode = () => {
+
+
+        /* EMIT */
+
+        let connect = () => {
+            socket.on('connect', () => {
+                // socket.emit('joinRoom', `POPO`);
+                console.log("CONNECTED")
+            });
+        }
+
+        let createRoom = (roomName) => {
+            socket.emit('createRoom', roomName)
+        }
+
+        let joinRoom = (roomName) => {
+            socket.emit('joinRoom', roomName)
+        }
+
+
+        /* RECEIVE */
+
+        socket.on('joined', () => {
+            console.log("JOINED")
+        })
+
+        return {
+            connect: connect,
+            createRoom: createRoom,
+            joinRoom: joinRoom
+        }
+    }
+
     /* Return start and stop function and play speed */
     return {
         start: start
@@ -146,13 +178,14 @@ const app = (() => {
         toggle: () => {
             (stateApp == "run") ? stop() : start();
         },
+        onlineMode: onlineMode,
         speed: speed
     };
 
 })();
 /* Real entry point to our bingo app. Show modals to choose players and
  when closed start bingo playing (callback) */
-docReady(() => showModal(modalPlayers(), app.start));
+docReady(() => showModal(modalPlayers(app.onlineMode()), app.start));
 
 
 export { app };
