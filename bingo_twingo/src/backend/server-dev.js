@@ -49,11 +49,13 @@ io.on('connect', (socket) => {
   let pubSub = new PubSub();
   let game;
   console.log("NEVER REACHED");
+
+
   //A player wants to join a bingo game
   socket.on('join', playerName => {
     let bingoCard = new BingoCard(playerName);
     // We create a random id in order to create a hash
-    // only known by joined user in order ti avoid fake cards
+    // only known by joined user in order to avoid fake cards
     let card = {
       id:"card_id_"+playerName,
       cardMatrix:bingoCard.getMatrix(),
@@ -117,19 +119,4 @@ io.on('connect', (socket) => {
     console.log("linia ->"+JSON.stringify(playInfo));
     io.sockets.in(game.id).emit('linia_accepted',playInfo);
   });
-
-
-  /* ONLINE MODE */
-
-  socket.on('joinRoom', roomName => {
-    socket.join(roomName);
-    console.log("JOINED");
-    io.to(roomName).emit('joined')
-  });
-
-  socket.on('createRoom', roomName => {
-    console.log("CREATING ROOM:");
-    console.log(roomName)
-  });
-
 });

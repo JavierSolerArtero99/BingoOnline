@@ -142,31 +142,66 @@ const app = (() => {
 
         /* EMIT */
 
-        let connect = () => {
-            socket.on('connect', () => {
-                // socket.emit('joinRoom', `POPO`);
-                console.log("CONNECTED")
-            });
-        }
-
-        let createRoom = (roomName) => {
-            socket.emit('createRoom', roomName)
-        }
-
-        let joinRoom = (roomName) => {
-            socket.emit('joinRoom', roomName)
+        let joinRoom = (playerName) => {
+            socket.emit('join', playerName)
         }
 
 
         /* RECEIVE */
 
-        socket.on('joined', () => {
-            console.log("JOINED")
+        /**
+         * When a player joins a game
+         */
+        socket.on('joined_game', (data) => {
+            console.log("joined_game", data);
         })
 
+        /**
+         * When another/self player joined a game 
+         */
+        socket.on('joined', (data) => {
+            console.log("joined", data);
+        })
+
+        /**
+         * Game starts
+         */
+        socket.on('starts_game', (data) => {
+            console.log("starts_game", data);
+        })
+
+        /**
+         * New number is out the bombo and must check linea and bingo
+         */
+        socket.on('new_number', (data) => {
+            console.log("new_number", data);
+            socket.emit('linia', "PLAYER")
+            socket.emit('bingo', "PLAYER")
+        })
+
+        /**
+         * When a linea is accepted by the server
+         */
+        socket.on('linia_accepted', (data) => {
+            console.log("linia_accepted", data);
+        })
+
+        /**
+         * When the bingo is accepted by the server
+         */
+        socket.on('bingo', (data) => {
+            console.log("bingo_accepted", data);
+        })
+
+        /**
+         * Ends the game
+         */
+        socket.on('end_game', (data) => {
+            console.log("end_game", data);
+        })
+
+
         return {
-            connect: connect,
-            createRoom: createRoom,
             joinRoom: joinRoom
         }
     }

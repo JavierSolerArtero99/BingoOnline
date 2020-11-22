@@ -241,31 +241,27 @@ export const modalPlayers = (onlineMode) => {
 
         /* ONLINE GAME */
 
-        /* create room */
-        let createRoomButton = document.getElementById('createRoom')
-        createRoomButton.addEventListener('click', function () {
-            let roomName = document.getElementById('roomName').value
-            if (roomName.length < 3) {
-                alert("El nombre de la sala tiene que ser superior a 3 caracteres")
-                return 0
-            }
-            onlineMode.createRoom(roomName)
-        });
+        // /* create room */
+        // let createRoomButton = document.getElementById('createRoom')
+        // createRoomButton.addEventListener('click', function () {
+        //     let roomName = document.getElementById('roomName').value
+        //     if (roomName.length < 3) {
+        //         alert("El nombre de la sala tiene que ser superior a 3 caracteres")
+        //         return 0
+        //     }
+        //     onlineMode.createRoom(roomName)
+        // });
 
         /* join room */
         let joinRoomButton = document.getElementById('joinRoom')
         joinRoomButton.addEventListener('click', function () {
-            let roomName = document.getElementById('roomName').value
-            if (roomName.length < 3) {
-                alert("El nombre de la sala tiene que ser superior a 3 caracteres")
+            let playerName = document.getElementById('playerName').value
+            if (playerName.length < 3) {
+                alert("El nombre del jugador tiene que ser superior a 3 caracteres")
                 return 0
             }
-            onlineMode.joinRoom(roomName)
+            onlineMode.joinRoom(playerName)
         });
-
-
-
-
     }
 
     return {
@@ -298,10 +294,11 @@ export const modalPlayers = (onlineMode) => {
                     <span class="remainingPlayers" id="remainingPlayersSpan"></span>
                 </div>
                 <div class="modal-content-export">
-                    <h3>Online Game</h3>
-                    <button id="createRoom" class="button">Create Room</button>
+                    <h3>Online Game</h3><br>
+                    <input type="text" id="playerName" value="Name"/>
+                    <!--<button id="createRoom" class="button">Create Room</button>-->
                     <button id="joinRoom" class="button">Join Room</button>
-                    <input type="text" id="roomName"/>
+                    <!--<input type="text" id="roomName"/>-->
                 </div>
                 <div class="modal-content-export">
                     <h3>Game settings</h3>
