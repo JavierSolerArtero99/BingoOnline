@@ -139,11 +139,39 @@ const app = (() => {
 
     let onlineMode = () => {
 
+        let cardMatrix = []
+        let extractedBalls = []
+        let onlineName = ""
+        let lineDone = false
+
+
+        let renderPanel = (extractedBall) => {
+            // render panel
+            (extractedBalls.length > 1) && (document.getElementById(extractedBalls[extractedBalls.length - 2]).className = "bingoBall")
+            document.getElementById(extractedBall).className = "bingoBall blink"
+        }
+
+        let renderCards = (extractedBall) => {
+            if (extractedBalls.length > 1) {
+                let previousMatches = Array.from(document.getElementsByClassName("card-" + extractedBalls[extractedBalls.length - 2]))
+                console.log(previousMatches);
+                previousMatches.forEach(numero => {
+                    numero.style.backgroundColor = "green"
+                });
+            }
+
+            let matches = Array.from(document.getElementsByClassName("card-" + extractedBall))
+            matches.forEach(numero => {
+                numero.style.backgroundColor = "#ef70eb"
+            });
+        }
+
+
         /* EMIT */
 
         let joinRoom = (playerName) => {
             socket.emit('join', playerName)
-            localStorage.setItem('onlineName', playerName)
+            onlineName = playerName
 
             clearModal('modal')
             clearModal('bg')
@@ -160,63 +188,90 @@ const app = (() => {
                 <div class="panel">
                     <div id="balls" class="balls__grid"></div>
                 </div>
-                <p>Waiting for other players<p/>
+                <h3 class="newPlayers">Waiting for other players...<h3/>
             </div>
             `, 'text/html');
 
             let layout = doc.body.firstChild;
             document.getElementById('main').appendChild(layout);
 
+            if (pubSub) pubSub.subscribe("GET-NUMBER", renderPanel);
+
             bombo = new Bombo(document.getElementById('balls'));
         }
-
 
         /* RECEIVE */
 
         /** When a player joins a game */
         socket.on('joined_game', (data) => {
-            pubSub = new PubSub();
+            data = JSON.parse(data)
+            cardMatrix = data.cardMatrix
         })
 
         /** When another/self player joined a game */
         socket.on('joined', (data) => {
             data = JSON.parse(data)
-            console.log("joined", data);
-
+            
             let out = `
             ${data.prayers.map((player) => {
                 return `
-                <h2 style="margin-bottom: -100px">Player ${player.username}</h2>
-                <table class='bingoCard'>
-                    `+
+                <div class="bingoCardLayout">
+                    <h1>Player ${player.username}</h1>
+                    <table class='bingoCard'>
+                        `+
                     player.card.map((value) =>
                         "<tr>" + value.map((val) => {
                             if (val == null) {
                                 return "<th class='nulo'></th>"
                             } else {
-                                return "<th>" + val + "</th>"
+                                return "<th class='card-" + + val + "'>" + val + "</th>"
                             }
                         }).join("")
                         + "</tr>"
                     ).join("") +
-                    `</table>`;
+                    `</table>
+                 </div>`;
             })}`
             document.getElementById('bingoCards').innerHTML = out;
+
+            pubSub.subscribe("CARD-NUMBER", renderCards)
         })
 
         /** Game starts */
         socket.on('starts_game', (data) => {
             console.log("starts_game", data);
+            clearModal('newPlayers')
         })
 
         /** New number is out the bombo and must check linea and bingo */
         socket.on('new_number', (data) => {
-            console.log(data);
+            extractedBalls.push(data.num)
+            pubSub.publish("GET-NUMBER", data.num)
+            pubSub.publish("CARD-NUMBER", data.num)
+
+            //check linea
+
+
+            //check bingo
+            let bingo = true;
+            cardMatrix.forEach((row) => {
+                let linia = row.filter((val) => { if (extractedBalls.indexOf(val) <= 0) return val }).length;
+                if (linia > 0) bingo = false;
+                else if (!lineDone) {
+                    lineDone = true
+                    socket.emit('linia', onlineName)
+                }
+            })
+
+            if (bingo) {
+                socket.emit('bingo', onlineName)
+            }
         })
 
         /** When a linea is accepted by the server */
         socket.on('linia_accepted', (data) => {
-            showModal(modalLiniaBingo("player", "linea"), function () {})
+            lineDone = true;
+            showModal(modalLiniaBingo("player", "linea"), function () { })
         })
 
         /** When the bingo is accepted by the server */
@@ -249,6 +304,7 @@ const app = (() => {
     };
 
 })();
+
 /* Real entry point to our bingo app. Show modals to choose players and
  when closed start bingo playing (callback) */
 docReady(() => showModal(modalPlayers(app.onlineMode()), app.start));

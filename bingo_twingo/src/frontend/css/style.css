@@ -224,3 +224,13 @@ table.bingoCard {
   .modal-content-export h3 {
     margin: 7px;
   }
+
+  /*ONLINE MODE*/
+
+  .newPlayers {
+    position: absolute;
+    font-weight: bold;
+    color: #4CAF50;
+    top: 70%;
+    left: 10%;
+  }
