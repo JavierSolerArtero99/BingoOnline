@@ -139,65 +139,96 @@ const app = (() => {
 
     let onlineMode = () => {
 
-
         /* EMIT */
 
         let joinRoom = (playerName) => {
             socket.emit('join', playerName)
+            localStorage.setItem('onlineName', playerName)
+
+            clearModal('modal')
+            clearModal('bg')
+
+            /* Layer where initial background video has been loaded we
+            need to remove it as we are going to start playing */
+            let videoEl = document.getElementById('videoBackground');
+            if (videoEl) videoEl.remove();
+
+            /* Basic template where we are going to render bingo play */
+            let doc = new DOMParser().parseFromString(`
+            <div class="gameLayout">
+                <div id="bingoCards" class="cards"></div>
+                <div class="panel">
+                    <div id="balls" class="balls__grid"></div>
+                </div>
+                <p>Waiting for other players<p/>
+            </div>
+            `, 'text/html');
+
+            let layout = doc.body.firstChild;
+            document.getElementById('main').appendChild(layout);
+
+            bombo = new Bombo(document.getElementById('balls'));
         }
 
 
         /* RECEIVE */
 
-        /**
-         * When a player joins a game
-         */
+        /** When a player joins a game */
         socket.on('joined_game', (data) => {
-            console.log("joined_game", data);
+            pubSub = new PubSub();
         })
 
-        /**
-         * When another/self player joined a game 
-         */
+        /** When another/self player joined a game */
         socket.on('joined', (data) => {
+            data = JSON.parse(data)
             console.log("joined", data);
+
+            let out = `
+            ${data.prayers.map((player) => {
+                return `
+                <h2 style="margin-bottom: -100px">Player ${player.username}</h2>
+                <table class='bingoCard'>
+                    `+
+                    player.card.map((value) =>
+                        "<tr>" + value.map((val) => {
+                            if (val == null) {
+                                return "<th class='nulo'></th>"
+                            } else {
+                                return "<th>" + val + "</th>"
+                            }
+                        }).join("")
+                        + "</tr>"
+                    ).join("") +
+                    `</table>`;
+            })}`
+            document.getElementById('bingoCards').innerHTML = out;
         })
 
-        /**
-         * Game starts
-         */
+        /** Game starts */
         socket.on('starts_game', (data) => {
             console.log("starts_game", data);
         })
 
-        /**
-         * New number is out the bombo and must check linea and bingo
-         */
+        /** New number is out the bombo and must check linea and bingo */
         socket.on('new_number', (data) => {
-            console.log("new_number", data);
-            socket.emit('linia', "PLAYER")
-            socket.emit('bingo', "PLAYER")
+            console.log(data);
         })
 
-        /**
-         * When a linea is accepted by the server
-         */
+        /** When a linea is accepted by the server */
         socket.on('linia_accepted', (data) => {
-            console.log("linia_accepted", data);
+            showModal(modalLiniaBingo("player", "linea"), function () {})
         })
 
-        /**
-         * When the bingo is accepted by the server
-         */
-        socket.on('bingo', (data) => {
-            console.log("bingo_accepted", data);
+        /** When the bingo is accepted by the server */
+        socket.on('bingo_accepted', (data) => {
+            showModal(modalLiniaBingo("player", "bingo"), function () {
+                showModal(modalPlayers(onlineMode()), app.start);
+            })
         })
 
-        /**
-         * Ends the game
-         */
+        /** Ends the game */
         socket.on('end_game', (data) => {
-            console.log("end_game", data);
+            // console.log("end_game", data);
         })
 
 

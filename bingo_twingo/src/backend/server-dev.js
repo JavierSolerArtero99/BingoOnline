@@ -53,6 +53,7 @@ io.on('connect', (socket) => {
 
   //A player wants to join a bingo game
   socket.on('join', playerName => {
+    console.log("buenas tardes");
     let bingoCard = new BingoCard(playerName);
     // We create a random id in order to create a hash
     // only known by joined user in order to avoid fake cards
